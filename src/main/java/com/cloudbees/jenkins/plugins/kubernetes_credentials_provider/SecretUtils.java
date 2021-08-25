@@ -40,6 +40,7 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -62,6 +63,7 @@ public abstract class SecretUtils {
 
     static final String JENKINS_IO_CREDENTIALS_SCOPE_LABEL = "jenkins.io/credentials-scope";
 
+    static final String JENKINS_IO_CREDENTIALS_ID_LABEL = "jenkins.io/credentials-id";
 
     /**
      * Convert a String representation of the base64 encoded bytes of a UTF-8 String back to a String. 
@@ -129,7 +131,12 @@ public abstract class SecretUtils {
      */
     public static String getCredentialId(Secret s) {
         // we must have a metadata as the label that identifies this as a Jenkins credential needs to be present
-        return s.getMetadata().getName();
+        ObjectMeta metadata = s.getMetadata();
+        Map<String, String> annotations = s.getMetadata().getAnnotations();
+        if(annotations != null && annotations.containsKey(JENKINS_IO_CREDENTIALS_ID_LABEL)) {
+            return annotations.get(JENKINS_IO_CREDENTIALS_ID_LABEL);
+        }
+        return metadata.getName();
     }
 
     /**
